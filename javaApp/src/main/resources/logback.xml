@@ -1,0 +1,21 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{yyyy/MM/dd-HH:mm:ss} %level [%thread] %caller{1} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+     日志输出级别从高到低：
+         ERROR > WARN > INFO > DEBUG
+         指定为 INFO 时，就会忽略 DEBUG 级别的日志
+     -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <logger name="org.springframework.context" level="DEBUG"/>
+</configuration>

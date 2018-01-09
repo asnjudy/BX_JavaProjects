@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:cache="http://www.springframework.org/schema/cache" xmlns:c="http://www.springframework.org/schema/mvc"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <!-- 定义一个Shiro的realm实现，连接到你后端的安全数据源 -->
+    <bean id="myRealm" class="com.asn.realm.CustomRealm1"></bean>
+
+    <!-- 安全管理器 SecurityManager -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- 单个realm应用，如果你有多个realms，请使用realms属性 -->
+        <property name="realm" ref="myRealm" />
+        <!-- 默认使用servlet容器的sessions，解注掉下面行，使用shiro本地的session -->
+        <!-- <property name="sessionMode" value="native"/>
+        <property name="cacheManager" ref="cacheManager" /> -->
+        <property name="sessionManager" ref="sessionManager" />
+    </bean>
+
+    <!-- 缓存管理器
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:ehcache-shiro.xml" />
+    </bean>-->
+
+    <!-- 会话管理器 SessionManager -->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="600000" />
+        <property name="deleteInvalidSessions" value="true" />
+    </bean>
+
+    <!-- 记住我管理器（使用cookie实现）
+    <bean id="remenberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <property name="cookie" ref="rememberMeCookie" />
+    </bean>
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="rememberMe" />
+        <property name="maxAge" value="2592000" />
+    </bean>-->
+
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+
+    <!-- 为spring配置的beans，启用Shiro注解 -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor"></bean>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager" />
+    </bean>
+
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager" />
+
+        <!-- override these for application-specific URLs
+        重写这些应用特定的URLs
+        -->
+        <!-- 没有登录认证的用户的请求，将会跳转到此地址。
+         不是必须的属性，不配置的话，会自动到项目WEB根目录下寻找"login.jsp"页面
+         -->
+        <property name="loginUrl" value="/login.jsp"/>
+        <property name="successUrl" value="/home.jsp"/>
+        <!-- 没有权限默认跳转的页面 -->
+        <property name="unauthorizedUrl" value="/unauthorized.jsp"/>
+
+        <!-- The 'filters' property is not necessary 属性filters不是必须的
+         since any declared javax.servlet.Filter bean defined will be automatically acquired and available
+         via its beanName in chain definitions,
+         因为任何声明的Filter bean，都能通过过滤器中的beanName自动获取
+        but you can perform instance overrides or name aliases here if you like:
+        但是，这里，你可以进行实例重写或使用别名-->
+        <property name="filters">
+            <util:map>
+                <entry key="authc" value-ref="formAuthenticationFilter"/>
+            </util:map>
+        </property>
+
+        <property name="filterChainDefinitions">
+            <value>
+                # chain定义的一些实例
+                /admin/** = authc, roles[admin]
+                /docs/** = authc, perms[document:read]
+                /** = authc
+                # 更多的URL-to-FilterChain定义 ....
+            </value>
+        </property>
+    </bean>
+
+    <!-- 在这个应用上下文中，你可以在你需要的任何地方定义 javax.servlet.Filter
+     它们将自动地被上面的 shiroFilter bean获取，并对 filterChainDefinitions 属性可得到
+     或者，你可以显示地、手动地把它们添加到 shiroFilter的filters Map属性
+
+    <bean id="someFilter" class="" />
+    <bean id="anotherFilter" class="" />-->
+
+
+    <!-- 基于Form表单的身份验证过滤器，不配置将也会注册此过虑器，表单中的用户账号、密码及loginurl将采用默认值，建议配置 -->
+    <bean id="formAuthenticationFilter"
+          class="org.apache.shiro.web.filter.authc.FormAuthenticationFilter">
+        <!-- 表单中账号的input名称 -->
+        <property name="usernameParam" value="username" />
+        <!-- 表单中密码的input名称 -->
+        <property name="passwordParam" value="password" />
+        <!-- loginurl：用户登陆地址，此地址是可以http访问的url地址 -->
+        <property name="loginUrl" value="/login.jsp" />
+    </bean>
+
+</beans>
