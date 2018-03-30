@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.Jedis;
 import redis.subpub.util.Commons;
 import redis.subpub.util.FileUtils;
 import redis.subpub.util.SerializationUtils;
@@ -39,10 +40,12 @@ public class RedisMessagePublisher {
 
 
         // 默认给个10分钟超时，如果10分钟还没传上去一个图片就应该是有问题了
-        BinaryJedis bjedis = new BinaryJedis(Commons.REDIS_HOST, Commons.REDIS_PORT, 600000);
+        Jedis jedis = new Jedis(Commons.REDIS_HOST, Commons.REDIS_PORT, 600000);
         logger.info("publish message to the redis");
-        bjedis.publish(Commons.CHANNEL, bytes);
+        jedis.publish(Commons.CHANNEL, bytes);
     }
+
+
 
 
     /**
@@ -51,7 +54,7 @@ public class RedisMessagePublisher {
      */
     public static void testConcurrentPublish() {
 
-        int concurrentThreadCout = 10;
+        int concurrentThreadCout = 1;
 
         final CyclicBarrier cyclicBarrier = new CyclicBarrier(concurrentThreadCout);
 
@@ -61,11 +64,11 @@ public class RedisMessagePublisher {
                 public void run() {
                     logger.info("running ...");
                     try {
-                        Thread.sleep(2000); // 给个延时，方便查看
+                        Thread.sleep(4000); // 给个延时，方便查看
                         cyclicBarrier.await();
 
                         // 每个线程跑2次
-                        for (int i = 0; i < 5; ++i) {
+                        for (int i = 0; i < 10; ++i) {
                             publish();
                             Thread.sleep(10);
                         }
@@ -77,6 +80,8 @@ public class RedisMessagePublisher {
                 }
             }).start();
         }
+
+        System.out.println("emddddddddd");
     }
 
     public static void main(String[] args) throws IOException {

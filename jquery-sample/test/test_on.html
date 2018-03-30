@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test on event</title>
+
+    <script type="text/javascript" src="../html/dep/jquery-ui-1.10.4.custom/js/jquery-1.10.2.js"></script>
+</head>
+<body>
+
+<body>
+    <div id="container">
+        <div id="test_div_xxx">原来内容</div>
+    </div>
+</body>
+
+<script type="text/javascript">
+
+    var version = "1_2_0";
+
+
+
+    $("#test_div_xxx").attr("id", "test_div_" + version);
+
+
+    version_re = version.replace(/\./g, "\\.");
+
+    alert(version_re);
+
+    var div_ele = "#test_div_" + version_re;
+    alert(div_ele);
+
+    $(div_ele).on("click", function () {
+       $(this).text("dsfsd");
+    });
+</script>
+
+</body>
+</html>
